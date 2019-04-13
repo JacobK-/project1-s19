@@ -4,26 +4,43 @@
       font-size: 15pt;
       font-family: arial;
     }
+    table, td {
+      border: 1px solid black;
+      border-collapse: collapse;
+    }
   </style>
 
+  <body>
+    <div style="float: right">
+      <form method="GET" action="/logout">
+        <p><input type="submit" value="Logout"></p>
+      </form>
+    </div>
+    <h1>Welcome back {{session.name}}</h1>
+    <br>
+    <h2>Check out friends near {{session.home_name}}:</h2>
+    <div>
+      <table style="width:500px">
+          <tr>
+            <th>Name</th>
+            <th>Location</th> 
+            <th>Distance</th>
+          </tr>
+        {% for row in data %}
+        <tr>
+            <td>{{row[0]}}</td>
+            <td>BLAH</td>
+            <td>20km</td>
+        </tr>
+      </table>
+      {% endfor %}
+    </div>
+    <br>
+    <br>
 
-<body>
-  <h1>Welcome back {{session.name}}</h1>
-  <br>
-  <h2>Check out friends near {{session.home_name}}:</h2>
-  <div>
-    {% for n in data %}
-    <div><h3>* {{n}}</h3></div>
-    {% endfor %}
-  </div>
-  <br>
-  <br>
-
-  <p><a href="/trip">Planning A Trip?</a></p>
-  <p><a href="/">Search other cities</a></p>
-  <p><a href="/friends">Search friends</a></p>
-  <p><a href="/recommendations">Recommendations</a></p>
-</body>
-
-
+    <p><a href="/trip">Planning A Trip?</a></p>
+    <p><a href="/">Search other cities</a></p>
+    <p><a href="/friends">Search friends</a></p>
+    <p><a href="/recommendations">Recommendations</a></p>
+  </body>
 </html>

@@ -134,13 +134,13 @@ def index():
         session['home_name'] = res.fetchone()[0]
         res.close()
 
-    # Get nearby friends
+    # Get friends
     cmd = '''SELECT * FROM USERS JOIN USER_FRIENDS on USER_FRIENDS.uid_2 =
         USERS.uid  WHERE USER_FRIENDS.uid=1'''
     res = g.conn.execute(text(cmd), uid=session['uid'])
     data = list()
     for row in res:
-        data.append(row['name'])
+        data.append([row['name']])
     res.close()
     print(data)
 
@@ -229,6 +229,11 @@ def login():
     # abort(401)
     # this_is_never_executed()
 
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('/login')
 
 if __name__ == "__main__":
     import click
