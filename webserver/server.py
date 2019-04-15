@@ -17,6 +17,8 @@ Read about it online.
 
 import os
 import json
+import math
+from math import radians
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
 from flask import Flask, request, render_template, g, redirect
@@ -60,6 +62,20 @@ engine.execute("""CREATE TABLE IF NOT EXISTS test (
 );""")
 engine.execute("""INSERT INTO test(name) VALUES ('grace hopper'),
     ('alan turing'), ('ada lovelace');""")
+
+
+def getMiles(lat1, long1, lat2, long2):
+    lat1 = radians(float(lat1))
+    long1 = radians(float(long1))
+    lat2 = radians(float(lat2))
+    long2 = radians(float(long2))
+
+    d_lat = lat2 - lat1
+    d_lng = long2 - long1
+    temp = (math.sin(d_lat / 2) ** 2 + math.cos(lat1) *
+            math.cos(lat2) * math.sin(d_lng / 2) ** 2)
+    return round(
+        3963.0 * (2 * math.atan2(math.sqrt(temp), math.sqrt(1 - temp))), 2)
 
 
 @app.before_request
@@ -139,12 +155,16 @@ def index():
 
     # Get friends
     try:
-        cmd = '''SELECT * FROM USERS JOIN USER_FRIENDS on USER_FRIENDS.uid_2 =
-            USERS.uid  WHERE USER_FRIENDS.uid=:uid'''
+        cmd = '''SELECT friends.name, LOCATION.name, gps_lat, gps_long FROM
+                LOCATION join (SELECT * FROM USERS JOIN USER_FRIENDS on
+                USER_FRIENDS.uid_2 = USERS.uid  WHERE USER_FRIENDS.uid=:uid) as
+                friends on lid=home'''
         res = g.conn.execute(text(cmd), uid=session['uid'])
         data = list()
         for row in res:
-            data.append([row['name']])
+            distance = getMiles(session['home_lat'], session['home_long'],
+                                row[2], row[3])
+            data.append([row[0], row[1], distance])
         res.close()
     except:
         pass
@@ -223,19 +243,28 @@ def loginreq():
         MIN(home) FROM USERS where email=:username and password=:password'''
     try:
         res = g.conn.execute(text(cmd), username=username,
-                             password=password).fetchone()
+                             password=password)
+        user = res.fetchone()
         res.close()
+        if(user[0] == 1):
+            session['uid'] = user[1]
+            session['name'] = user[2]
+            session['profile_picture'] = user[3]
+            session['home'] = user[4]
+    except:
+        return redirect('/login')
 
-        if(res[0] == 1):
-            session['uid'] = res[1]
-            session['name'] = res[2]
-            session['profile_picture'] = res[3]
-            session['home'] = res[4]
-
-        return redirect('/')
+    cmd = '''SELECT gps_lat, gps_long FROM LOCATION where lid=:home'''
+    try:
+        res = g.conn.execute(text(cmd), home=session['home'])
+        loc = res.fetchone()
+        res.close()
+        session['home_lat'] = loc[0]
+        session['home_long'] = loc[1]
     except:
         pass
-    return redirect('/login')
+
+    return redirect('/')
 
 
 @app.route('/login')
