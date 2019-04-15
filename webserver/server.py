@@ -129,20 +129,25 @@ def index():
     # example of a database query
     #
     if ('home_name' not in session):
-        cmd = '''SELECT name FROM LOCATION where lid=:user_home'''
-        res = g.conn.execute(text(cmd), user_home=session['home'])
-        session['home_name'] = res.fetchone()[0]
-        res.close()
+        try:
+            cmd = '''SELECT name FROM LOCATION where lid=:user_home'''
+            res = g.conn.execute(text(cmd), user_home=session['home'])
+            session['home_name'] = res.fetchone()[0]
+            res.close()
+        except:
+            pass
 
     # Get friends
-    cmd = '''SELECT * FROM USERS JOIN USER_FRIENDS on USER_FRIENDS.uid_2 =
-        USERS.uid  WHERE USER_FRIENDS.uid=1'''
-    res = g.conn.execute(text(cmd), uid=session['uid'])
-    data = list()
-    for row in res:
-        data.append([row['name']])
-    res.close()
-    print(data)
+    try:
+        cmd = '''SELECT * FROM USERS JOIN USER_FRIENDS on USER_FRIENDS.uid_2 =
+            USERS.uid  WHERE USER_FRIENDS.uid=:uid'''
+        res = g.conn.execute(text(cmd), uid=session['uid'])
+        data = list()
+        for row in res:
+            data.append([row['name']])
+        res.close()
+    except:
+        pass
 
     #
     # Flask uses Jinja templates, which is an extension to HTML where you can
@@ -200,7 +205,12 @@ def add():
     name = request.form['name']
     print(name)
     cmd = 'INSERT INTO test(name) VALUES (:name1), (:name2)'
-    g.conn.execute(text(cmd), name1=name, name2=name)
+
+    try:
+        res = g.conn.execute(text(cmd), name1=name, name2=name)
+        res.close()
+    except:
+        pass
     return redirect('/')
 
 
@@ -211,15 +221,20 @@ def loginreq():
     password = request.form['password']
     cmd = '''SELECT COUNT(*), MIN(uid), MIN(name), MIN(profile_picture),
         MIN(home) FROM USERS where email=:username and password=:password'''
-    res = g.conn.execute(text(cmd), username=username,
-                         password=password).fetchone()
+    try:
+        res = g.conn.execute(text(cmd), username=username,
+                             password=password).fetchone()
+        res.close()
 
-    if(res[0] == 1):
-        session['uid'] = res[1]
-        session['name'] = res[2]
-        session['profile_picture'] = res[3]
-        session['home'] = res[4]
+        if(res[0] == 1):
+            session['uid'] = res[1]
+            session['name'] = res[2]
+            session['profile_picture'] = res[3]
+            session['home'] = res[4]
+
         return redirect('/')
+    except:
+        pass
     return redirect('/login')
 
 
@@ -233,6 +248,31 @@ def login():
 @app.route('/logout')
 def logout():
     session.clear()
+    return redirect('/login')
+
+
+@app.route('/signup')
+def signup():
+    return render_template("signup.html")
+
+
+@app.route('/signupreq', methods=['POST'])
+def signupreq():
+    email = request.form['email']
+    password = request.form['password']
+    name = request.form['name']
+    profilepic = request.form['profilepic']
+    home = request.form['home']
+    cmd = '''INSERT INTO USERS(email, password, name, profile_picture, home) VALUES
+        (:email, :password, :name, :profilepic, :home)'''
+
+    try:
+        res = g.conn.execute(text(cmd), email=email, password=password,
+                             name=name, profilepic=profilepic, home=home)
+        res.close()
+    except:
+        return redirect('/signup')
+
     return redirect('/login')
 
 if __name__ == "__main__":

@@ -10,12 +10,17 @@
 <body>
   <h1>Login Page</h1>
 
-<form method="POST" action="/loginreq">
-    <p>email: <input type="text" name="username"></p>
-    <p>Password: <input type="password" name="password"></p>
-    <p><input type="submit" value="Login"></p>
-</form>
+<div>
+  <form method="POST" action="/loginreq">
+      <p>email: <input type="text" name="username"></p>
+      <p>Password: <input type="password" name="password"></p>
+      <p><input type="submit" value="Login"></p>
+  </form>
 
+  <form method="GET" action="/signup">
+    <p><input type="submit" value="Don't have an account?"></p>
+  </form>
+</div>
 </body>
 
 
