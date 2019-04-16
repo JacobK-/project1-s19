@@ -166,6 +166,7 @@ def index():
                                 row[2], row[3])
             data.append([row[0], row[1], distance])
         res.close()
+        data = sorted(data, key=lambda x: x[2])  # sort by distance
     except:
         pass
 
@@ -287,11 +288,6 @@ def signup():
 
 @app.route('/signupreq', methods=['POST'])
 def signupreq():
-    email = request.form['email']
-    password = request.form['password']
-    name = request.form['name']
-    profilepic = request.form['profilepic']
-    home = request.form['home']
     cmd = '''INSERT INTO USERS(email, password, name, profile_picture, home) VALUES
         (:email, :password, :name, :profilepic, :home)'''
 
@@ -303,6 +299,89 @@ def signupreq():
         return redirect('/signup')
 
     return redirect('/login')
+
+
+@app.route('/trip')
+def trip():
+    upcoming_trips = list()
+    previous_trips = list()
+
+    cmd = '''select id, start_date, end_date, name from (select * from trip join
+             user_trip on id = trip_id where user_id=:id and end_date >=
+             CURRENT_DATE) as tripList natural join location order by
+             start_date ASC;'''
+    try:
+        res = g.conn.execute(text(cmd), id=session["uid"])
+        for row in res:
+            upcoming_trips.append(row)
+        res.close()
+    except:
+        return redirect('/signup')
+
+    context = dict(upcoming_trips=upcoming_trips,
+                   previous_trips=previous_trips)
+    
+    cmd = '''select id, start_date, end_date, name from (select * from trip join
+             user_trip on id = trip_id where user_id=:id and end_date <
+             CURRENT_DATE) as tripList natural join location order by
+             start_date DESC;'''
+    try:
+        res = g.conn.execute(text(cmd), id=session["uid"])
+        for row in res:
+            previous_trips.append(row)
+        res.close()
+    except:
+        return redirect('/signup')
+
+    return render_template("trip.html", **context)
+
+
+@app.route('/tripjoinreq', methods=['POST'])
+def tripjoinreq():
+    trip_id = request.form['trip']
+    cmd = '''INSERT INTO user_trip VALUES (:id, :trip)'''
+    try:
+        res = g.conn.execute(text(cmd), id=session["uid"],
+                             trip=trip_id)
+        res.close()
+    except:
+        pass
+
+    return redirect('/trip')
+
+
+@app.route('/tripleavereq', methods=['POST'])
+def tripleavereq():
+    trip_id = request.form['trip']
+    cmd = '''DELETE FROM user_trip WHERE user_id=:id and trip_id=:trip'''
+    try:
+        res = g.conn.execute(text(cmd), id=session["uid"],
+                             trip=trip_id)
+        res.close()
+    except:
+        pass
+
+    return redirect('/trip')
+
+
+@app.route('/tripreq', methods=['POST'])
+def tripreq():
+    start = request.form['start']
+    end = request.form['end']
+    location = request.form['location']
+    cmd = '''INSERT INTO trip(start_date, end_date, lid)
+        VALUES (:start, :end, :location);\
+        INSERT INTO USER_TRIP SELECT :uid, max(id) from trip;'''
+    try:
+        res = g.conn.execute(text(cmd), start=start, end=end,
+                             location=location, uid=session["uid"])
+        res.close()
+    except:
+        pass
+
+    return redirect('/trip')
+
+
 
 if __name__ == "__main__":
     import click
