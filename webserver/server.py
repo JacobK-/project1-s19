@@ -455,18 +455,45 @@ def rental():
         return redirect('/login')
     rentals = list()
     
-    cmd = '''select * from rental_lease where start_date > CURRENT_DATE;'''
+    cmd = '''select * from rental_lease where start_date > CURRENT_DATE and
+        owner <> :uid;'''
     try:
-        res = g.conn.execute(text(cmd))
+        res = g.conn.execute(text(cmd), uid=session["uid"])
         for row in res:
-            rental.append(row)
+            rentals.append(row)
         res.close()
     except:
         return redirect('/')
 
     context = dict(rentals=rentals)
-    return render_template("trip.html", **context)
+    return render_template("rental.html", **context)
 
+
+@app.route('/rentalrequest/<owner>/<address>/<start>/<end>')
+def rentalrequest(owner, address, start, end):
+    if ('uid' not in session or session['uid'] is None):
+        return redirect('/login')
+
+    context = dict(owner=owner, address=address, start=start, end=end)
+    return render_template("rentalrequest.html", **context)
+
+
+@app.route('/rentalreq/<owner>/<address>/<start>/<end>', methods=['POST'])
+def rentalreq(owner, address, start, end):
+    comment = request.form['comment']
+
+    cmd = '''INSERT INTO rental_request(requester, address, owner, comment,
+        start_date, end_data) VALUES(:uid, :address, :owner,
+        :comment, :start, :end)'''
+    if(1==1):
+        res = g.conn.execute(text(cmd), uid=session["uid"], address=address,
+                             owner=owner, start=start, end=end,
+                             comment=comment)
+        res.close()
+    else:
+        return redirect('/')
+
+    return redirect('/rental')
 
 @app.route('/reviews')
 def reviews():
@@ -513,6 +540,26 @@ def reviewsubmit(lid):
         return redirect('/trip')
 
     return redirect('/trip')
+
+
+@app.route('/requests')
+def requests():
+    if ('uid' not in session or session['uid'] is None):
+        return redirect('/login')
+    requests = list()
+
+    cmd = '''select name, address, start_date, end_data, comment from
+        rental_request join users on requester=uid where owner=:uid;'''
+    try:
+        res = g.conn.execute(text(cmd), uid=session["uid"])
+        for row in res:
+            requests.append(row)
+        res.close()
+    except:
+        return redirect('/')
+
+    context = dict(requests=requests)
+    return render_template("requests.html", **context)
 
 
 @app.route('/signup')

@@ -1,0 +1,33 @@
+<html>
+  <style>
+    body{ 
+      font-size: 15pt;
+      font-family: arial;
+    }
+    table, td {
+      border: 1px solid black;
+      border-collapse: collapse;
+    }
+  </style>
+
+  <body>
+    <div style="float: right">
+        <form method="GET" action="/rental">
+            <p><input type="submit" value="Back"></p>
+        </form>
+      <form method="GET" action="/logout">
+        <p><input type="submit" value="Logout"></p>
+      </form>
+    </div>
+    <h1>Request rental</h1>
+    <div>
+        <form method="POST" action="/rentalreq/{{owner}}/{{address}}/{{start}}/{{end}}">
+            <p>{{Owner}}</p>
+            <p>{{Address}}</p>
+            <p>Comment: <input type="text" name="comment"></p>
+            <p><input type="submit" value="Request rental"></p>
+        </form>
+    </div>
+    <br>
+  </body>
+</html>

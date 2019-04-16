@@ -20,27 +20,23 @@
       </form>
     </div>
     <h1>Rentals</h1>
-    <h2>Available rentals:</h2>
+    <h2>Current requests:</h2>
     <div>
         <table style="width:500px">
             <tr>
-                <th>Owner</th>
+                <th>User</th>
                 <th>Address</th>
                 <th>Start Date</th>
                 <th>End Date</th>
-                <th>Price</th>
-                <th>Request</th>
+                <th>Message</th>
             </tr>
-            {% for property in rentals %}
+            {% for request in requests %}
             <tr>
-                <td>{{property[0]}}</td>
-                <td>{{property[1]}}</td>
-                <td>{{property[2]}}</td>
-                <td>{{property[3]}}</td>
-                <td>{{property[4]}}</td>
-                <td><form method="GET" action="/rentalrequest/{{property[0]}}/{{property[1]}}/{{property[2]}}/{{property[3]}}">
-                    <p><input type="submit" value="Request rental"></p>
-                </form></td>
+                <td>{{request[0]}}</td>
+                <td>{{request[1]}}</td>
+                <td>{{request[2]}}</td>
+                <td>{{request[3]}}</td>
+                <td>{{request[4]}}</td>
             </tr>
             {% endfor %}
         </table>
