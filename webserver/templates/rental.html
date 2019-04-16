@@ -1,0 +1,50 @@
+<html>
+  <style>
+    body{ 
+      font-size: 15pt;
+      font-family: arial;
+    }
+    table, td {
+      border: 1px solid black;
+      border-collapse: collapse;
+    }
+  </style>
+
+  <body>
+    <div style="float: right">
+        <form method="GET" action="/">
+            <p><input type="submit" value="Home"></p>
+        </form>
+      <form method="GET" action="/logout">
+        <p><input type="submit" value="Logout"></p>
+      </form>
+    </div>
+    <h1>Rentals</h1>
+    <h2>Available rentals:</h2>
+    <div>
+        <table style="width:500px">
+            <tr>
+                <th>Owner</th>
+                <th>Address</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Price</th>
+                <th>Request</th>
+            </tr>
+            {% for property in rentals %}
+            <tr>
+                <td>{{property[0]}}</td>
+                <td>{{property[1]}}</td>
+                <td>{{property[2]}}</td>
+                <td>{{property[3]}}</td>
+                <td>{{property[4]}}</td>
+                <td><form method="POST" action="/rentalrequest/{{rental[0]}}/{{rental[2]}}">
+                    <p><input type="submit" value="Request rental"></p>
+                </form></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <br>
+  </body>
+</html>

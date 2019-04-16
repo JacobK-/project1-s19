@@ -402,6 +402,25 @@ def logout():
     return redirect('/login')
 
 
+@app.route('/rental')
+def rental():
+    if ('uid' not in session or session['uid'] is None):
+        return redirect('/login')
+    rentals = list()
+    
+    cmd = '''select * from rental_lease where start_date > CURRENT_DATE;'''
+    try:
+        res = g.conn.execute(text(cmd))
+        for row in res:
+            rental.append(row)
+        res.close()
+    except:
+        return redirect('/')
+
+    context = dict(rentals=rentals)
+    return render_template("trip.html", **context)
+
+
 @app.route('/signup')
 def signup():
     return render_template("signup.html")
@@ -440,9 +459,6 @@ def trip():
         res.close()
     except:
         return redirect('/signup')
-
-    context = dict(upcoming_trips=upcoming_trips,
-                   previous_trips=previous_trips)
     
     cmd = '''select id, start_date, end_date, name from (select * from trip join
              user_trip on id = trip_id where user_id=:id and end_date <
@@ -456,6 +472,8 @@ def trip():
     except:
         return redirect('/signup')
 
+    context = dict(upcoming_trips=upcoming_trips,
+                   previous_trips=previous_trips)
     return render_template("trip.html", **context)
 
 
