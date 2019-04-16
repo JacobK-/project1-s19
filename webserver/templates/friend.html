@@ -1,0 +1,63 @@
+<html>
+  <style>
+    body{ 
+      font-size: 15pt;
+      font-family: arial;
+    }
+    table, td {
+      border: 1px solid black;
+      border-collapse: collapse;
+    }
+  </style>
+
+  <body>
+    <div style="float: right">
+        <form method="GET" action="/">
+            <p><input type="submit" value="Home"></p>
+        </form>
+      <form method="GET" action="/logout">
+        <p><input type="submit" value="Logout"></p>
+      </form>
+    </div>
+    <h1>Friends</h1>
+    <h2>Current friends:</h2>
+    <div>
+        <table style="width:500px">
+            <tr>
+                <th>Name</th>
+                <th>Remove friend</th>
+            </tr>
+            {% for friend in friends %}
+            <tr>
+                <td>{{friend[0]}}</td>
+                <td><form method="POST" action="/friendremovereq/{{friend[1]}}">
+                    <p><input type="submit" value="Remove friend :("></p>
+                </form></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <br>
+
+    <h2>Find new friends:</h2>
+    <div>
+        <table style="width:500px">
+            <tr>
+                <th>Name</th>
+                <th>Activities in Common</th>
+                <th>Add friend</th>
+            </tr>
+            {% for friend in non_friends %}
+            <tr>
+                <td>{{friend[1]}}</td>
+                <td>{{friend[2]}}</td>
+                <td><form method="POST" action="/friendaddreq/{{friend[0]}}">
+                    <p><input type="submit" value="Add!"></p>
+                </form></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+  </body>
+</html>

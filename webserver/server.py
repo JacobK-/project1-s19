@@ -235,6 +235,69 @@ def add():
     return redirect('/')
 
 
+@app.route('/friend')
+def friend():
+    if ('uid' not in session or session['uid'] is None):
+        return redirect('/login')
+    friends = list()
+    non_friends = list()
+
+    cmd = '''select name, users.uid from user_friends join users on uid_2=users.uid WHERE
+        user_friends.uid=:uid'''
+    try:
+        res = g.conn.execute(text(cmd), uid=session["uid"])
+        for row in res:
+            friends.append(row)
+        res.close()
+    except:
+        return redirect('/friend')
+    
+    cmd = '''select * from (select * from users where uid not in (SELECT uid_2
+        from user_friends where uid = :uid)) as non_friends LEFT JOIN
+        (SELECT U.name, UA2.uid, COUNT(*) as "Activities in Common"
+        FROM USER_ACTIVITY as UA1, USER_ACTIVITY as UA2, Users as U
+        WHERE UA1.uid <> UA2.uid and UA1.name = UA2.name and
+        UA1.uid = :uid and U.uid = UA2.uid GROUP BY (UA1.uid, UA2.uid, U.name)
+        ORDER BY COUNT(*) DESC) as similarUSERS on non_friends.uid =
+        similarUSERS.uid WHERE non_friends.uid != :uid
+        ORDER by "Activities in Common";'''
+    try:
+        res = g.conn.execute(text(cmd), uid=session["uid"])
+        for row in res:
+            non_friends.append([row[0], row[3], row[8]])
+        res.close()
+    except:
+        return redirect('/friends')
+
+    context = dict(friends=friends,
+                   non_friends=non_friends)
+    return render_template("friend.html", **context)
+
+
+@app.route('/friendaddreq/<friend>', methods=['POST'])
+def friendaddreq(friend):
+    cmd = '''INSERT INTO user_friends VALUES(:uid, :uid_2);'''
+    try:
+        res = g.conn.execute(text(cmd), uid=session["uid"],
+                             uid_2=friend)
+        res.close()
+    except:
+        pass
+
+    return redirect('/friend')
+
+@app.route('/friendremovereq/<friend>', methods=['POST'])
+def friendremovereq(friend):
+    cmd = '''DELETE FROM user_friends WHERE uid=:uid and uid_2=:uid_2'''
+    try:
+        res = g.conn.execute(text(cmd), uid=session["uid"],
+                             uid_2=friend)
+        res.close()
+    except:
+        pass
+
+    return redirect('/friend')
+
 # Example of adding new data to the database
 @app.route('/loginreq', methods=['POST'])
 def loginreq():
@@ -303,6 +366,8 @@ def signupreq():
 
 @app.route('/trip')
 def trip():
+    if ('uid' not in session or session['uid'] is None):
+        return redirect('/login')
     upcoming_trips = list()
     previous_trips = list()
 
@@ -380,7 +445,6 @@ def tripreq():
         pass
 
     return redirect('/trip')
-
 
 
 if __name__ == "__main__":
