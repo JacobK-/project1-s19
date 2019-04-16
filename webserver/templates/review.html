@@ -1,0 +1,32 @@
+<html>
+  <style>
+    body{ 
+      font-size: 15pt;
+      font-family: arial;
+    }
+    table, td {
+      border: 1px solid black;
+      border-collapse: collapse;
+    }
+  </style>
+
+  <body>
+    <div style="float: right">
+        <form method="GET" action="/">
+            <p><input type="submit" value="Home"></p>
+        </form>
+      <form method="GET" action="/logout">
+        <p><input type="submit" value="Logout"></p>
+      </form>
+    </div>
+    <h1>Review {{data[1]}}</h1>
+    <div>
+        <form method="POST" action="/reviewsubmit/{{data[0]}}">
+            <p>Rating: <input type="number" name="rating"></p>
+            <p>Comment: <input type="text" name="comment"></p>
+            <p><input type="submit" value="Add review"></p>
+        </form>
+    </div>
+    <br>
+  </body>
+</html>

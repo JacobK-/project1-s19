@@ -356,6 +356,53 @@ def friendremovereq(friend):
 
     return redirect('/friend')
 
+
+@app.route('/location')
+def location():
+    location = list()
+    cmd = '''SELECT max(lid), max(gps_lat), max(gps_long), max(name),
+        max(description), max(country),  AVG(coalesce(rating, 0)) AS avg from
+        (SELECT location.lid, gps_lat, gps_long, name, description, country,
+        rating FROM Location left Join Reviews on location.lid = reviews.lid)
+        as f group by lid order by avg DESC;'''
+
+    try:
+        res = g.conn.execute(text(cmd))
+        for row in res:
+            avg_rating = row[6]
+            if avg_rating < 0.001:
+                avg_rating = "Not yet rated"
+            location.append([row[0], row[1], row[2], row[3], row[4], row[5],
+                             avg_rating])
+        res.close()
+        res.close()
+    except:
+        return redirect('/')
+
+    context = dict(location=location)
+    return render_template("location.html", **context)
+
+
+@app.route('/locationadd', methods=['POST'])
+def locationadd():
+    lat = request.form['latitude']
+    lng = request.form['longditude']
+    name = request.form['name']
+    desc = request.form['description']
+    country = request.form['country']
+    cmd = '''INSERT INTO location(gps_lat, gps_long, name,
+        description, country) VALUES (:lat, :lng, :name, :desc, :country);
+        '''
+    try:
+        res = g.conn.execute(text(cmd), lat=lat, lng=lng, name=name,
+                             desc=desc, country=country)
+        res.close()
+    except:
+        pass
+
+    return redirect('/location')
+
+
 # Example of adding new data to the database
 @app.route('/loginreq', methods=['POST'])
 def loginreq():
@@ -421,6 +468,32 @@ def rental():
     return render_template("trip.html", **context)
 
 
+@app.route('/review/<lid>/<lname>')
+def review(lid, lname):
+    if ('uid' not in session or session['uid'] is None):
+        return redirect('/login')
+    data = [lid, lname]
+
+    context = dict(data=data)
+    return render_template('/review.html', **context)
+
+
+@app.route('/reviewsubmit/<lid>', methods=['POST'])
+def reviewsubmit(lid):
+    rating = request.form['rating']
+    comment = request.form['comment']
+    
+    cmd = '''INSERT INTO reviews VALUES(:rating, :comment, :uid, :lid)'''
+    try:
+        res = g.conn.execute(text(cmd), rating=rating, comment=comment,
+                             uid=session["uid"], lid=lid)
+        res.close()
+    except:
+        return redirect('/trip')
+
+    return redirect('/trip')
+
+
 @app.route('/signup')
 def signup():
     return render_template("signup.html")
@@ -449,28 +522,43 @@ def trip():
     previous_trips = list()
 
     cmd = '''select id, start_date, end_date, name from (select * from trip join
-             user_trip on id = trip_id where user_id=:id and end_date >=
+             user_trip on id = trip_id where user_id=:uid and end_date >=
              CURRENT_DATE) as tripList natural join location order by
              start_date ASC;'''
     try:
-        res = g.conn.execute(text(cmd), id=session["uid"])
+        res = g.conn.execute(text(cmd), uid=session["uid"])
         for row in res:
             upcoming_trips.append(row)
         res.close()
     except:
-        return redirect('/signup')
+        return redirect('/')
     
-    cmd = '''select id, start_date, end_date, name from (select * from trip join
-             user_trip on id = trip_id where user_id=:id and end_date <
+    cmd = '''select id, start_date, end_date, name, location.lid from (select * from trip join
+             user_trip on id = trip_id where user_id=:uid and end_date <
              CURRENT_DATE) as tripList natural join location order by
              start_date DESC;'''
     try:
-        res = g.conn.execute(text(cmd), id=session["uid"])
+        res = g.conn.execute(text(cmd), uid=session["uid"])
         for row in res:
-            previous_trips.append(row)
+            previous_trips.append(list(row))
         res.close()
     except:
-        return redirect('/signup')
+        return redirect('/')
+
+    cmd = '''select lid from reviews where uid=:uid;'''
+    if(1==1):
+        res = g.conn.execute(text(cmd), uid=session["uid"])
+        rows = list(res)
+        for i in range(len(previous_trips)):
+            exists = False
+            for row in rows:
+                if(previous_trips[i][4] == row[0]):
+                    exists = True
+            previous_trips[i].append(exists)
+        print(previous_trips)
+        res.close()
+    else:
+        return redirect('/')
 
     context = dict(upcoming_trips=upcoming_trips,
                    previous_trips=previous_trips)

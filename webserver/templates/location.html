@@ -1,0 +1,60 @@
+<html>
+  <style>
+    body{ 
+      font-size: 15pt;
+      font-family: arial;
+    }
+    table, td {
+      border: 1px solid black;
+      border-collapse: collapse;
+    }
+  </style>
+
+  <body>
+    <div style="float: right">
+        <form method="GET" action="/">
+            <p><input type="submit" value="Home"></p>
+        </form>
+    </div>
+    <h1>Location</h1>
+    <h2>Current locations:</h2>
+    <div>
+        <table style="width:500px">
+            <tr>
+                <th>ID</th>
+                <th>Latitude</th>
+                <th>Longditude</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Country</th>
+                <th>Avg Rating</th>
+            </tr>
+            {% for loc in location %}
+            <tr>
+                <td>{{loc[0]}}</td>
+                <td>{{loc[1]}}</td>
+                <td>{{loc[2]}}</td>
+                <td>{{loc[3]}}</td>
+                <td>{{loc[4]}}</td>
+                <td>{{loc[5]}}</td>
+                <td>{{loc[6]}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <br>
+
+    <h2>Add new location:</h2>
+    <div>
+        <form method="POST" action="/locationadd">     
+            <p>Latitude: <input type="text" name="latitude"></p>
+            <p>Longditude: <input type="text" name="longditude"></p>     
+            <p>Name: <input type="text" name="name"></p>
+            <p>Description: <input type="text" name="description"></p>
+            <p>Country: <input type="text" name="country"></p>
+            <p><input type="submit" value="Add new location!"></p>
+        </form>
+    </div>
+  </body>
+</html>

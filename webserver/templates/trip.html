@@ -50,6 +50,7 @@
                 <th>Start Date</th>
                 <th>End Date</th> 
                 <th>Location Name</th>
+                <th>Review Location</th>
             </tr>
             {% for trip in previous_trips %}
             <tr>
@@ -57,6 +58,9 @@
                 <td>{{trip[1]}}</td>
                 <td>{{trip[2]}}</td>
                 <td>{{trip[3]}}</td>
+                <td><form method="GET" action="/review/{{trip[4]}}/{{trip[3]}}">
+                    <p><input type="submit" value="Review location" {% if trip[5] %} disabled {% endif %}></p>
+                </form></td>
             </tr>
             {% endfor %}
         </table>
