@@ -468,6 +468,27 @@ def rental():
     return render_template("trip.html", **context)
 
 
+@app.route('/reviews')
+def reviews():
+    if ('uid' not in session or session['uid'] is None):
+        return redirect('/login')
+    reviews = list()
+    
+    cmd = '''select location.name, t.name, rating, comment from (select * from
+        reviews natural join users) as t join location on t.lid = location.lid
+        order by location.name;'''
+    try:
+        res = g.conn.execute(text(cmd))
+        for row in res:
+            reviews.append(row)
+        res.close()
+    except:
+        return redirect('/')
+
+    context = dict(reviews=reviews)
+    return render_template("reviews.html", **context)
+
+
 @app.route('/review/<lid>/<lname>')
 def review(lid, lname):
     if ('uid' not in session or session['uid'] is None):
