@@ -546,7 +546,7 @@ def trip():
         return redirect('/')
 
     cmd = '''select lid from reviews where uid=:uid;'''
-    if(1==1):
+    try:
         res = g.conn.execute(text(cmd), uid=session["uid"])
         rows = list(res)
         for i in range(len(previous_trips)):
@@ -557,7 +557,7 @@ def trip():
             previous_trips[i].append(exists)
         print(previous_trips)
         res.close()
-    else:
+    except:
         return redirect('/')
 
     context = dict(upcoming_trips=upcoming_trips,
