@@ -485,12 +485,12 @@ def rentalreq(owner, address, start, end):
     cmd = '''INSERT INTO rental_request(requester, address, owner, comment,
         start_date, end_data) VALUES(:uid, :address, :owner,
         :comment, :start, :end)'''
-    if(1==1):
+    try:
         res = g.conn.execute(text(cmd), uid=session["uid"], address=address,
                              owner=owner, start=start, end=end,
                              comment=comment)
         res.close()
-    else:
+    except:
         return redirect('/')
 
     return redirect('/rental')
@@ -569,6 +569,12 @@ def signup():
 
 @app.route('/signupreq', methods=['POST'])
 def signupreq():
+    email = request.form['email']
+    password = request.form['password']
+    name = request.form['name']
+    profilepic = request.form['profilepic']
+    home = request.form['home']
+
     cmd = '''INSERT INTO USERS(email, password, name, profile_picture, home) VALUES
         (:email, :password, :name, :profilepic, :home)'''
 
