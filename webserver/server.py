@@ -215,25 +215,82 @@ def index():
 #
 
 
-@app.route('/another')
-def another():
-    return render_template("anotherfile.html")
+@app.route('/activity')
+def activity():
+    if ('uid' not in session or session['uid'] is None):
+        return redirect('/login')
+    current_activities = list()
+    other_activities = list()
 
-
-# Example of adding new data to the database
-@app.route('/add', methods=['POST'])
-def add():
-    name = request.form['name']
-    print(name)
-    cmd = 'INSERT INTO test(name) VALUES (:name1), (:name2)'
-
+    cmd = '''select name, description from user_activity natural join
+        activity where uid=:uid'''
     try:
-        res = g.conn.execute(text(cmd), name1=name, name2=name)
+        res = g.conn.execute(text(cmd), uid=session["uid"])
+        for row in res:
+            current_activities.append(row)
+        res.close()
+    except:
+        return redirect('/activity')
+    
+    cmd = '''select name, description from activity where name not in (select
+        name from user_activity natural join activity where uid=:uid);'''
+    try:
+        res = g.conn.execute(text(cmd), uid=session["uid"])
+        for row in res:
+            other_activities.append(row)
+        res.close()
+    except:
+        return redirect('/activity')
+
+    context = dict(current_activities=current_activities,
+                   other_activities=other_activities)
+
+    return render_template("activity.html", **context)
+
+@app.route('/activityadd/<activity>', methods=['POST'])
+def activityadd(activity):
+    cmd = '''INSERT INTO user_activity VALUES (:activity, :uid)'''
+    try:
+        res = g.conn.execute(text(cmd), uid=session["uid"],
+                             activity=activity)
         res.close()
     except:
         pass
-    return redirect('/')
 
+    return redirect('/activity')
+
+
+@app.route('/activitycreate', methods=['POST'])
+def activitycreate():
+    name = request.form['name']
+    description = request.form['description']
+    if (description == '' or description is None):
+        cmd = '''INSERT INTO activity values (:name);
+            INSERT INTO user_activity VALUES (:name, :uid);'''
+    else:
+        cmd = '''INSERT INTO activity values (:name, :description);
+            INSERT INTO user_activity VALUES (:name, :uid);'''
+    try:
+        res = g.conn.execute(text(cmd), name=name, description=description,
+                             uid=session["uid"])
+        res.close()
+    except:
+        pass
+
+    return redirect('/activity')
+
+
+@app.route('/activityremove/<activity>', methods=['POST'])
+def activityremove(activity):
+    cmd = '''DELETE FROM user_activity WHERE uid=:uid and name=:activity'''
+    try:
+        res = g.conn.execute(text(cmd), uid=session["uid"],
+                             activity=activity)
+        res.close()
+    except:
+        pass
+
+    return redirect('/activity')
 
 @app.route('/friend')
 def friend():
@@ -285,6 +342,7 @@ def friendaddreq(friend):
         pass
 
     return redirect('/friend')
+
 
 @app.route('/friendremovereq/<friend>', methods=['POST'])
 def friendremovereq(friend):

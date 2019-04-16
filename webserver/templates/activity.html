@@ -1,0 +1,76 @@
+<html>
+  <style>
+    body{ 
+      font-size: 15pt;
+      font-family: arial;
+    }
+    table, td {
+      border: 1px solid black;
+      border-collapse: collapse;
+    }
+  </style>
+
+  <body>
+    <div style="float: right">
+        <form method="GET" action="/">
+            <p><input type="submit" value="Home"></p>
+        </form>
+      <form method="GET" action="/logout">
+        <p><input type="submit" value="Logout"></p>
+      </form>
+    </div>
+    <h1>Acitvities</h1>
+    <h2>Current acitivities:</h2>
+    <div>
+        <table style="width:500px">
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Remove activity</th>
+            </tr>
+            {% for activity in current_activities %}
+            <tr>
+                <td>{{activity[0]}}</td>
+                <td>{{activity[1]}}</td>
+                <td><form method="POST" action="/activityremove/{{activity[0]}}">
+                    <p><input type="submit" value="Remove acitivity :("></p>
+                </form></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <br>
+
+    <h2>Find new activities:</h2>
+    <div>
+        <table style="width:500px">
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Add activity</th>
+            </tr>
+            {% for activity in other_activities %}
+            <tr>
+                <td>{{activity[0]}}</td>
+                <td>{{activity[1]}}</td>
+                <td><form method="POST" action="/activityadd/{{activity[0]}}">
+                    <p><input type="submit" value="Add acitivity!"></p>
+                </form></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <br>
+
+    <h2>Create a new activity:</h2>
+    <div>
+        <form method="POST" action="/activitycreate">
+            <p>Name: <input type="text" name="name"></p>
+            <p>Description: <input type="text" name="description"></p> 
+            <p><input type="submit" value="Add acitivity!"></p>
+        </form>
+    </div>
+  </body>
+</html>
